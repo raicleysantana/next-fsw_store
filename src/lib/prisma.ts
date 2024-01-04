@@ -14,4 +14,14 @@ if (process.env.NODE_ENV === "production") {
   prisma = global.cachedPrisma;
 }
 
+prisma.$extends({
+  model: {
+    $allModels: {
+      created(params: any) {
+        console.log(params);
+      },
+    },
+  },
+});
+
 export const prismaClient = prisma;

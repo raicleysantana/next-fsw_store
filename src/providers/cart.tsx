@@ -2,7 +2,7 @@
 
 import { productWithTotalPrice } from "@/helpers/products";
 import { Product } from "@prisma/client";
-import { ReactNode, createContext, useState } from "react";
+import { ReactNode, createContext, useMemo, useState } from "react";
 
 export interface CartProduct extends productWithTotalPrice {
     quantity: number;
@@ -18,6 +18,9 @@ interface ICartContext {
     decreaseProductQuantity: (productId: string) => void;
     increaseProductQuantity: (productId: string) => void;
     removeProductFromCart: (productId: string) => void;
+    total: number;
+    subTotal: number;
+    totalDiscount: number;
 }
 
 export const CartContext = createContext<ICartContext>({
@@ -30,6 +33,9 @@ export const CartContext = createContext<ICartContext>({
     decreaseProductQuantity: () => { },
     increaseProductQuantity: () => { },
     removeProductFromCart: () => { },
+    total: 0,
+    subTotal: 0,
+    totalDiscount: 0,
 });
 
 const CartProvider = ({ children }: { children: ReactNode }) => {
@@ -89,6 +95,16 @@ const CartProvider = ({ children }: { children: ReactNode }) => {
         setProducts(products.filter((cartProduct) => cartProduct.id !== productId))
     }
 
+    const subTotal = useMemo(() => {
+        return products.reduce((acc, product) => acc + Number(product.basePrice) * product.quantity, 0);
+    }, [products]);
+
+    const total = useMemo(() => {
+        return products.reduce((acc, product) => acc + Number(product.totalPrice) * product.quantity, 0)
+    }, [products]);
+
+    const totalDiscount = total - subTotal;
+
     return (
         <CartContext.Provider
             value={{
@@ -100,7 +116,10 @@ const CartProvider = ({ children }: { children: ReactNode }) => {
                 addProductToCart,
                 decreaseProductQuantity,
                 increaseProductQuantity,
-                removeProductFromCart
+                removeProductFromCart,
+                total,
+                subTotal,
+                totalDiscount,
             }}>
             {children}
         </CartContext.Provider>
